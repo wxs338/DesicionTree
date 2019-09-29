@@ -33,9 +33,12 @@ def calcShannonEnt(dataset):
             labelCounts[currentLabel] = 0
         labelCounts[currentLabel] += 1
     entropy = 0.0
+
     for key in labelCounts:
         property = float(labelCounts[key])/numSamples
-        entropy -= property * log(property,2)
+        entropy -= property * log(property, 2)
+
+
     return entropy
 
 
@@ -44,6 +47,15 @@ def calcShannonEnt(dataset):
 #    labels = ['no surfacing','flippers']
 #    return dataset, labels
 
+def splitDataSet(dataSet, axis, value):
+
+    retDataSet = []
+    for featVec in dataSet:
+        if featVec[axis] == value:
+            reducedFeatVec = list(featVec[:axis])
+            reducedFeatVec.extend(featVec[axis+1:])
+            retDataSet.append(reducedFeatVec)
+    return retDataSet
 
 def getSubDataset(dataset,colindex,value):
     subdataset = [] # 用于存储子数据集
@@ -58,23 +70,24 @@ def getSubDataset(dataset,colindex,value):
 
 def bestFeatToGetSubdataset(dataset):
     # 下边这句实现：除去最后一列类别标签列剩余的列数即为特征个数
-    numFeature = len(dataset[0]) - 1
+    numFeature = len(dataset[0]) - 2
     baseEntropy = calcShannonEnt(dataset)
     print("baseEntropy =", baseEntropy)
-    bestInfoGain = 0.0; bestFeature = -1
-    for i in range(numFeature):# i表示该函数传入的数据集中每个特征
+    bestInfoGain = 0.0
+    bestFeature = -1
+    for i in range(1, numFeature+1):# i表示该函数传入的数据集中每个特征
         # 下边这句实现抽取特征i在数据集中的所有取值
-        print("A",i+1)
+
         feat_i_values = [example[i] for example in dataset]
         uniqueValues = set(feat_i_values)
         feat_i_entropy = 0.0
         for value in uniqueValues:
-            subDataset = getSubDataset(dataset,i,value)
+            subDataset = splitDataSet(dataset, i, value)
             # 下边这句计算pi
             prob_i = len(subDataset)/float(len(dataset))
             feat_i_entropy += prob_i * calcShannonEnt(subDataset)
         infoGain_i = baseEntropy - feat_i_entropy
-        print("InfoGain  = ", infoGain_i)
+        # print("InfoGain  = ", infoGain_i)
         if (infoGain_i > bestInfoGain):
             bestInfoGain = infoGain_i
             bestFeature = i
@@ -88,10 +101,10 @@ def mostClass(ClassList):
             classCount[class_i] = 0
         classCount[class_i] += 1
     sortedClassCount = sorted(classCount.iteritems(),
-    key=operator.itemgetter(1),reverse = True)
+    key=operator.itemgetter(1), reverse = True)
     return sortedClassCount[0][0]
 
-def creatTree(dataset,labels):
+def creatTree(dataset,features):
     classList = [example[-1] for example in dataset]
     #判断传入的dataset中是否只有一种类别，是，返回该类别
     if classList.count(classList[0]) == len(classList):
@@ -102,40 +115,43 @@ def creatTree(dataset,labels):
     #找出最好的特征划分数据集
     bestFeat = bestFeatToGetSubdataset(dataset)
     #找出最好特征对应的标签
-    bestFeatLabel = labels[bestFeat]
+    bestFeatLabel = features[bestFeat]
     #搭建树结构
     myTree = {bestFeatLabel:{}}
-    del (labels[bestFeat])
+    del (features[bestFeat])
     #抽取最好特征的可能取值集合
     bestFeatValues = [example[bestFeat] for example in dataset]
     uniqueBestFeatValues = set(bestFeatValues)
     for value in uniqueBestFeatValues:
         #取出在该最好特征的value取值下的子数据集和子标签列表
-        subDataset = getSubDataset(dataset,bestFeat,value)
-        subLabels = labels[:]
+        subDataset = getSubDataset(dataset, bestFeat, value)
+        subLabels = features[:]
         #递归创建子树
-        myTree[bestFeatLabel][value] = creatTree(subDataset,subLabels)
+        myTree[bestFeatLabel][value] = creatTree(subDataset, subLabels)
     return myTree
 
 def classify(inputTree,featlabels,testFeatValue):
-    firstStr = inputTree.keys()[0]
+    firstStr = list(inputTree.keys())[0]
     secondDict = inputTree[firstStr]
     featIndex = featlabels.index(firstStr)
+    classLabel = None
     for firstStr_value in secondDict.keys():
         if testFeatValue[featIndex] == firstStr_value:
             if type(secondDict[firstStr_value]).__name__ == 'dict':
-                classLabel = classify(secondDict[firstStr_value],featlabels,testFeatValue)
-            else: classLabel = secondDict[firstStr_value]
+                classLabel = classify(secondDict[firstStr_value], featlabels, testFeatValue)
+            else:
+                classLabel = secondDict[firstStr_value]
     return classLabel
 
-def storeTree(trainTree,filename):
+def storeTree(trainTree, filename):
 
-    fw = open(filename,'w')
-    pickle.dump(trainTree,fw)
+    fw = open(filename, 'wb')
+    pickle.dump(trainTree, fw)
     fw.close()
+
 def grabTree(filename):
 
-    fr = open(filename)
+    fr = open(filename, 'rb')
     return pickle.load(fr)
 
 
@@ -165,13 +181,13 @@ if __name__ == '__main__':
     print("The Dataset is", args.dataLocation)
     print("The number of examples in Dataset is ", len(dataset))
 
-    print("The number of feature is ", len(dataset.schema), "Test if list", dataset.schema[2].name)
+    features = [feature.name for feature in dataset.schema]
 
-    labels = [feature.name for feature in dataset.schema]
+    print("The number of feature is ", len(dataset.schema))
 
-    print("Features are: ", labels)
+    print("Features are: ", features)
 
-    print("Looks Load Dataset Sucessfully")
+    print("Looks Load Dataset Sucessfully!!")
 
     # 5 folder divide
 
@@ -179,8 +195,9 @@ if __name__ == '__main__':
 
 
 
-    storelabels = labels[:]#复制label
-    trainTree = creatTree(dataset, labels)
+    storelabels = features[:]#复制label
+    trainTree = creatTree(dataset, features)
     print(trainTree)
-    classlabel = classify(trainTree, storelabels, [0, 1])
+    storeTree(trainTree, (args.dataLocation+" Tree"))
+    classlabel = classify(trainTree, storelabels, dataset[5])
     print("At the end", classlabel)
