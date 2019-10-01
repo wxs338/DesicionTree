@@ -25,18 +25,20 @@ def create5folders(dataset):
 
 # entropy function
 def calcEntropy(dataset):
-      numSamples = len(dataset)
-      labelCounts = {}
-      for feature in dataset:
-            currentLabl = features[-1]
-            if currentLabl not in labelCounts.keys():
-                  labelCounts[currentLabl] += 1
-            labelCounts[currentLabl] += 1
-      entro = 0.0
-      for key in labelCounts:
-            temp = float(labelCounts[key])/numSamples
-            entro -= property * log(property,2)
-      return entro
+
+    numsamples = len(dataset)
+    labelCounts = {}
+    for features in dataset:
+        currentLabl = features[-1]
+        if currentLabl not in labelCounts.keys():
+            labelCounts[currentLabl] = 0
+
+        labelCounts[currentLabl] += 1
+    entro = 0.0
+    for key in labelCounts:
+        prop = float(labelCounts[key])/numsamples
+        entro -= prop * log(prop, 2)
+    return entro
 
 
 #def createDataSet():
@@ -107,7 +109,8 @@ def gainRatioNumeric(category,attributes):
     if len(set(attri))==1:
         return 0
     else:
-        gainValues = []; divPoint = [];
+        gainValues = []
+        divPoint = []
         for i in range(1, len(cate)):
             if not attri[i] == attri[i-1]:
                 gainValues.append(calcEntropy(cate[:i]) * float(i) / len(cate) + calcEntropy(cate[i:]) * (1-float(i) / len(cate)))
@@ -150,7 +153,7 @@ def cross_validation_split(dataset, n_folds):
     for i in range(n_folds):
         fold = list()
         while len(fold) < fold_size:
-            index = randrange(len(dataset_copy))
+            index = random.randrange(len(dataset_copy))
             fold.append(dataset_copy.pop(index))
         dataset_split.append(fold)
     return dataset_split
@@ -317,10 +320,6 @@ if __name__ == '__main__':
     print("Looks Load Dataset Sucessfully!!")
 
     # 5 folder divide
-
-
-
-
 
     storelabels = features[:]#复制label
     trainTree = creatTree(dataset, features)
