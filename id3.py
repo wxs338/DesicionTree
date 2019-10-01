@@ -1,6 +1,7 @@
 
 from math import log
 import operator
+import pickle
 
 #创建数据集
 def createDataSet():
@@ -70,6 +71,11 @@ def chooseBestFeat(dataSet):
             baseInfoGain=infoGain
     return bestFeat
 
+# Create a terminal node value
+def to_terminal(group):
+	outcomes = [row[-1] for row in group]
+	return max(set(outcomes), key=outcomes.count)
+
 #对数据集创建树
 def CreateTree(dataSet,labels):
     classList=[example[-1] for example in dataSet]
@@ -89,3 +95,14 @@ def CreateTree(dataSet,labels):
         Tree[bestLabel][value]=CreateTree(splitDataSet(dataSet,bestFeat,value),subLabels)
     return Tree
 
+
+def storeTree(trainTree, filename):
+
+    fw = open(filename, 'wb')
+    pickle.dump(trainTree, fw)
+    fw.close()
+
+def grabTree(filename):
+
+    fr = open(filename, 'rb')
+    return pickle.load(fr)
