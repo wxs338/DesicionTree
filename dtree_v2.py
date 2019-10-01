@@ -127,6 +127,56 @@ def get_split(dataset):
     return {'index': b_index, 'value': b_value, 'groups': b_groups}
 
 
+def get_split_inforgain(dataset):
+    class_values = list(set(row[-1] for row in dataset))
+    b_index, b_value, b_score, b_groups = 999, 999, 999, None
+    for index in range(1, len(dataset[0]) - 1):
+        for row in dataset:
+            groups = test_split(index, row[index], dataset)
+            entro = calcEntropy(dataset)
+            if entro < b_score:
+                b_index, b_value, b_score, b_groups = index, row[index], entro, groups
+    return {'index': b_index, 'value': b_value, 'groups': b_groups}
+
+
+def splitDataSet(dataSet, axis, value):
+
+    retDataSet = []
+    for featVec in dataSet:
+        if featVec[axis] == value:
+            reducedFeatVec = list(featVec[:axis])
+            reducedFeatVec.extend(featVec[axis+1:])
+            retDataSet.append(reducedFeatVec)
+    return retDataSet
+
+
+def bestFeatToGetSubdataset(dataset):
+    # 下边这句实现：除去最后一列类别标签列剩余的列数即为特征个数
+    numFeature = len(dataset[0]) - 2
+    baseEntropy = calcEntropy(dataset)
+    print("baseEntropy =", baseEntropy)
+    bestInfoGain = 0.0
+    bestFeature = -1
+    for i in range(1, numFeature+1):# i表示该函数传入的数据集中每个特征
+        # 下边这句实现抽取特征i在数据集中的所有取值
+
+        feat_i_values = [example[i] for example in dataset]
+        uniqueValues = set(feat_i_values)
+        feat_i_entropy = 0.0
+        for value in uniqueValues:
+            subDataset = splitDataSet(dataset, i, value)
+            # 下边这句计算pi
+            prob_i = len(subDataset)/float(len(dataset))
+            feat_i_entropy += prob_i * calcEntropy(subDataset)
+        infoGain_i = baseEntropy - feat_i_entropy
+        # print("InfoGain  = ", infoGain_i)
+        if (infoGain_i > bestInfoGain):
+            bestInfoGain = infoGain_i
+            bestFeature = i
+            print("BestFeature", bestFeature)
+    return bestFeature
+
+
 # Create a terminal node value
 def to_terminal(group):
     outcomes = [row[-1] for row in group]
@@ -149,19 +199,19 @@ def split(node, max_depth, min_size, depth):
     if len(left) <= min_size:
         node['left'] = to_terminal(left)
     else:
-        node['left'] = get_split(left)
+        node['left'] = get_split_inforgain(left)
         split(node['left'], max_depth, min_size, depth + 1)
     # process right child
     if len(right) <= min_size:
         node['right'] = to_terminal(right)
     else:
-        node['right'] = get_split(right)
+        node['right'] = get_split_inforgain(right)
         split(node['right'], max_depth, min_size, depth + 1)
 
 
 # Build a decision tree
 def build_tree(train, max_depth, min_size):
-    root = get_split(train)
+    root = get_split_inforgain(train)
     split(root, max_depth, min_size, 1)
     return root
 
@@ -188,8 +238,6 @@ def decision_tree(train, test, max_depth, min_size):
         prediction = predict(tree, row)
         predictions.append(prediction)
     return (predictions)
-
-
 
 
 if __name__ == '__main__':

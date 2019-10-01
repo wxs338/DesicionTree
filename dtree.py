@@ -2,6 +2,8 @@
 
 import argparse
 from mldata import *
+from id3 import *
+from c45 import *
 from math import log
 import operator
 import pickle
@@ -41,57 +43,7 @@ def calcEntropy(dataset):
     return entro
 
 
-#def createDataSet():
-#    dataset = [[1,1,'yes'],[1,1,'yes'],[1,0,'no'],[0,1,'no'],[0,0,'no']]
-#    labels = ['no surfacing','flippers']
-#    return dataset, labels
 
-def splitDataSet(dataSet, axis, value):
-
-    retDataSet = []
-    for featVec in dataSet:
-        if featVec[axis] == value:
-            reducedFeatVec = list(featVec[:axis])
-            reducedFeatVec.extend(featVec[axis+1:])
-            retDataSet.append(reducedFeatVec)
-    return retDataSet
-
-def getSubDataset(dataset,colindex,value):
-    subdataset = [] # 用于存储子数据集
-    for rowvector in dataset:
-        if rowvector[colindex] == value:
-            # 下边两句实现抽取除第colIndex列特征的其他特征取值
-            subrowvector = rowvector[:colindex]
-            subrowvector.extend(rowvector[colindex+1:])
-            # 将抽取的特征行添加到特征子数据集中
-            subdataset.append(subrowvector)
-    return subdataset
-
-
-
-# Calculate the Gini index for a split dataset
-def gini_index(groups, classes):
-	# count all samples at split point
-	n_instances = float(sum([len(group) for group in groups]))
-	# sum weighted Gini index for each group
-	gini = 0.0
-	for group in groups:
-		size = float(len(group))
-		# avoid divide by zero
-		if size == 0:
-			continue
-		score = 0.0
-		# score the group based on the score for each class
-		for class_val in classes:
-			p = [row[-1] for row in group].count(class_val) / size
-			score += p * p
-		# weight the group score by its relative size
-		gini += (1.0 - score) * (size / n_instances)
-	return gini
-
-# test Gini values
-print(gini_index([[[1, 1], [1, 0]], [[1, 1], [1, 0]]], [0, 1]))
-print(gini_index([[[1, 0], [1, 0]], [[1, 1], [1, 1]]], [0, 1]))
 
 # Create a terminal node value
 def to_terminal(group):
@@ -223,6 +175,19 @@ def bestFeatToGetSubdataset(dataset):
             bestFeature = i
             print("BestFeature", bestFeature)
     return bestFeature
+
+
+def getSubDataset(dataset,colindex,value):
+    subdataset = [] # 用于存储子数据集
+    for rowvector in dataset:
+        if rowvector[colindex] == value:
+            # 下边两句实现抽取除第colIndex列特征的其他特征取值
+            subrowvector = rowvector[:colindex]
+            subrowvector.extend(rowvector[colindex+1:])
+            # 将抽取的特征行添加到特征子数据集中
+            subdataset.append(subrowvector)
+    return subdataset
+
 
 def mostClass(ClassList):
     classCount = {}
