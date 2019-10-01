@@ -23,23 +23,20 @@ def create5folders(dataset):
     return firstfold, secondfold, thirdfold, fourthfold, fifthfold
 
 
-
-def calcShannonEnt(dataset):
-    numSamples = len(dataset)
-    labelCounts = {}
-    for allFeatureVector in dataset:
-        currentLabel = allFeatureVector[-1]
-        if currentLabel not in labelCounts.keys():
-            labelCounts[currentLabel] = 0
-        labelCounts[currentLabel] += 1
-    entropy = 0.0
-
-    for key in labelCounts:
-        property = float(labelCounts[key])/numSamples
-        entropy -= property * log(property, 2)
-
-
-    return entropy
+# entropy function
+def calcEntropy(dataset):
+      numSamples = len(dataset)
+      labelCounts = {}
+      for feature in dataset:
+            currentLabl = allFeatures[-1]
+            if currentLabel not in labelCounts.keys():
+                  labelCounts[currentLabel += 1
+            labelCounts[currentLabel] += 1
+      entro = 0.0
+      for key in labelCounts:
+            temp = float(labelCounts[key])/numSamples
+            entro -= property * log(property,2)
+      return entro
 
 
 #def createDataSet():
@@ -68,25 +65,7 @@ def getSubDataset(dataset,colindex,value):
             subdataset.append(subrowvector)
     return subdataset
 
-# Calculate the Gini index for a split dataset
-def gini_index(groups, classes):
-	# count all samples at split point
-	n_instances = float(sum([len(group) for group in groups]))
-	# sum weighted Gini index for each group
-	gini = 0.0
-	for group in groups:
-		size = float(len(group))
-		# avoid divide by zero
-		if size == 0:
-			continue
-		score = 0.0
-		# score the group based on the score for each class
-		for class_val in classes:
-			p = [row[-1] for row in group].count(class_val) / size
-			score += p * p
-		# weight the group score by its relative size
-		gini += (1.0 - score) * (size / n_instances)
-	return gini
+
 
 # Calculate the Gini index for a split dataset
 def gini_index(groups, classes):
@@ -131,9 +110,9 @@ def gainRatioNumeric(category,attributes):
         gainValues = []; divPoint = [];
         for i in range(1, len(cate)):
             if not attri[i] == attri[i-1]:
-                gainValues.append(entropy(cate[:i]) * float(i) / len(cate) + entropy(cate[i:]) * (1-float(i) / len(cate)))
+                gainValues.append(calcEntropy(cate[:i]) * float(i) / len(cate) + calcEntropy(cate[i:]) * (1-float(i) / len(cate)))
                 divPoint.append(i)
-        gain = entropy(cate) - min(gainValues)
+        gain = calcEntropy(cate) - min(gainValues)
         pValue = float(divPoint[gainValues.index(min(gainValues))])/len(cate)
         entryAttribute = -pValue * math.log(pValue,2) - (1 - pValue) * math.log((1 - pValue), 2)
         value = gain / entryAttribute
@@ -154,9 +133,9 @@ def gainRatioNominal(category, attributes):
         for b in range(len(categories)):
             if attribute[b] == a:
                 categoryKind.append(categories[b])
-        offset = offset + partition * entropy(categoryKind)
-    entropyOfAttributes = entropy(attribute)
-    gain = entropy(categories) - offset
+        offset = offset + partition * calcEntropy(categoryKind)
+    entropyOfAttributes = calcEntropy(attribute)
+    gain = calcEntropy(categories) - offset
     if entropyOfAttributes == 0:
         return 0
     else:
@@ -219,7 +198,7 @@ def test_split(index, value, dataset):
 def bestFeatToGetSubdataset(dataset):
     # 下边这句实现：除去最后一列类别标签列剩余的列数即为特征个数
     numFeature = len(dataset[0]) - 2
-    baseEntropy = calcShannonEnt(dataset)
+    baseEntropy = calcEntropy(dataset)
     print("baseEntropy =", baseEntropy)
     bestInfoGain = 0.0
     bestFeature = -1
@@ -233,7 +212,7 @@ def bestFeatToGetSubdataset(dataset):
             subDataset = splitDataSet(dataset, i, value)
             # 下边这句计算pi
             prob_i = len(subDataset)/float(len(dataset))
-            feat_i_entropy += prob_i * calcShannonEnt(subDataset)
+            feat_i_entropy += prob_i * calcEntropy(subDataset)
         infoGain_i = baseEntropy - feat_i_entropy
         # print("InfoGain  = ", infoGain_i)
         if (infoGain_i > bestInfoGain):
