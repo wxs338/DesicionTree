@@ -28,10 +28,10 @@ def calcEntropy(dataset):
       numSamples = len(dataset)
       labelCounts = {}
       for feature in dataset:
-            currentLabl = allFeatures[-1]
-            if currentLabel not in labelCounts.keys():
-                  labelCounts[currentLabel += 1
-            labelCounts[currentLabel] += 1
+            currentLabl = features[-1]
+            if currentLabl not in labelCounts.keys():
+                  labelCounts[currentLabl] += 1
+            labelCounts[currentLabl] += 1
       entro = 0.0
       for key in labelCounts:
             temp = float(labelCounts[key])/numSamples
