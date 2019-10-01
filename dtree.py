@@ -68,6 +68,154 @@ def getSubDataset(dataset,colindex,value):
             subdataset.append(subrowvector)
     return subdataset
 
+# Calculate the Gini index for a split dataset
+def gini_index(groups, classes):
+	# count all samples at split point
+	n_instances = float(sum([len(group) for group in groups]))
+	# sum weighted Gini index for each group
+	gini = 0.0
+	for group in groups:
+		size = float(len(group))
+		# avoid divide by zero
+		if size == 0:
+			continue
+		score = 0.0
+		# score the group based on the score for each class
+		for class_val in classes:
+			p = [row[-1] for row in group].count(class_val) / size
+			score += p * p
+		# weight the group score by its relative size
+		gini += (1.0 - score) * (size / n_instances)
+	return gini
+
+# Calculate the Gini index for a split dataset
+def gini_index(groups, classes):
+	# count all samples at split point
+	n_instances = float(sum([len(group) for group in groups]))
+	# sum weighted Gini index for each group
+	gini = 0.0
+	for group in groups:
+		size = float(len(group))
+		# avoid divide by zero
+		if size == 0:
+			continue
+		score = 0.0
+		# score the group based on the score for each class
+		for class_val in classes:
+			p = [row[-1] for row in group].count(class_val) / size
+			score += p * p
+		# weight the group score by its relative size
+		gini += (1.0 - score) * (size / n_instances)
+	return gini
+
+# test Gini values
+print(gini_index([[[1, 1], [1, 0]], [[1, 1], [1, 0]]], [0, 1]))
+print(gini_index([[[1, 0], [1, 0]], [[1, 1], [1, 1]]], [0, 1]))
+
+# Create a terminal node value
+def to_terminal(group):
+	outcomes = [row[-1] for row in group]
+	return max(set(outcomes), key=outcomes.count)
+
+def gainRatioNumeric(category,attributes):
+    categories = []
+    for i in range(len(attributes)):
+        if not attributes[i] == "?":
+            categories.append([float(attributes[i]),category[i]])
+    categories = sorted(categories, key = lambda x:x[0])
+    attri = [categories[i][0] for i in range(len(categories))]
+    cate = [categories[i][1] for i in range(len(categories))]
+    if len(set(attri))==1:
+        return 0
+    else:
+        gainValues = []; divPoint = [];
+        for i in range(1, len(cate)):
+            if not attri[i] == attri[i-1]:
+                gainValues.append(entropy(cate[:i]) * float(i) / len(cate) + entropy(cate[i:]) * (1-float(i) / len(cate)))
+                divPoint.append(i)
+        gain = entropy(cate) - min(gainValues)
+        pValue = float(divPoint[gainValues.index(min(gainValues))])/len(cate)
+        entryAttribute = -pValue * math.log(pValue,2) - (1 - pValue) * math.log((1 - pValue), 2)
+        value = gain / entryAttribute
+        return value
+
+
+def gainRatioNominal(category, attributes):
+    attribute = []
+    categories = []
+    offset = 0
+    for a in range(len(attributes)):
+        if not attributes[a] == "?":
+            attribute.append(attributes[a])
+            categories.append(category[a])
+    for a in set(attribute):
+        categoryKind = []
+        partition = float(attribute.count(a)) / len(attribute)
+        for b in range(len(categories)):
+            if attribute[b] == a:
+                categoryKind.append(categories[b])
+        offset = offset + partition * entropy(categoryKind)
+    entropyOfAttributes = entropy(attribute)
+    gain = entropy(categories) - offset
+    if entropyOfAttributes == 0:
+        return 0
+    else:
+        result = gain / entropyOfAttributes
+        return result
+
+# Split a dataset into k folds
+def cross_validation_split(dataset, n_folds):
+    dataset_split = list()
+    dataset_copy = list(dataset)
+    fold_size = int(len(dataset) / n_folds)
+    for i in range(n_folds):
+        fold = list()
+        while len(fold) < fold_size:
+            index = randrange(len(dataset_copy))
+            fold.append(dataset_copy.pop(index))
+        dataset_split.append(fold)
+    return dataset_split
+
+
+# Calculate accuracy percentage
+def accuracy_metric(actual, predicted):
+    correct = 0
+    for i in range(len(actual)):
+        if actual[i] == predicted[i]:
+            correct += 1
+    return correct / float(len(actual)) * 100.0
+
+
+# Evaluate an algorithm using a cross validation split
+def evaluate_algorithm(dataset, algorithm, n_folds, *args):
+    folds = cross_validation_split(dataset, n_folds)
+    scores = list()
+    for fold in folds:
+        train_set = list(folds)
+        train_set.remove(fold)
+        train_set = sum(train_set, [])
+        test_set = list()
+        for row in fold:
+            row_copy = list(row)
+            test_set.append(row_copy)
+            row_copy[-1] = None
+        predicted = algorithm(train_set, test_set, *args)
+        actual = [row[-1] for row in fold]
+        accuracy = accuracy_metric(actual, predicted)
+        scores.append(accuracy)
+    return scores
+
+
+# Split a dataset based on an attribute and an attribute value
+def test_split(index, value, dataset):
+    left, right = list(), list()
+    for row in dataset:
+        if row[index] < value:
+            left.append(row)
+        else:
+            right.append(row)
+    return left, right
+
 def bestFeatToGetSubdataset(dataset):
     # 下边这句实现：除去最后一列类别标签列剩余的列数即为特征个数
     numFeature = len(dataset[0]) - 2
