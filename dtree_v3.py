@@ -1,8 +1,10 @@
 
 
 import argparse
+from pathlib import Path
+import os
 from mldata import *
-import id3
+import createdtree
 import c45
 
 import operator
@@ -110,25 +112,49 @@ if __name__ == '__main__':
           "Max Depth ", args.max_depth_of_tree, "Info Gain Type ", args.informationGainType)
 
     # load dataset
+    dataPath = Path(args.dataLocation)
+    (dirname, dataname) = os.path.split(dataPath)
 
-    dataset = parse_c45(args.dataLocation)
+    dataset = parse_c45(os.path.basename(dataPath), rootdir = dirname)
+    max_depth = args.max_depth_of_tree
+    validation_type = args.validationType
+    split_criterion = args.informationGainType
 
-    print("The Dataset is", args.dataLocation)
-    print("The number of examples in Dataset is ", len(dataset))
+    #print("The Dataset is", args.dataLocation)
+    #print("The number of examples in Dataset is ", len(dataset))
 
     features = [feature.name for feature in dataset.schema]
 
     print("The number of feature is ", len(dataset.schema))
 
-    print("Features are: ", features)
+    print("Features are: ", features[1:-1])
 
-    print("Looks Load Dataset Sucessfully!!")
+    storelabels = features[:]  # copy features
 
-    # 5 folder divide
+    # Option 4 split criterion: 0 for information gain 1 for gain ratio
 
-    storelabels = features[:]#复制label
-    trainTree = id3.CreateTree(dataset, features)
-    print(trainTree)
-    id3.storeTree(trainTree, (args.dataLocation+" Tree"))
-    classlabel = classify(trainTree, storelabels, dataset[5])
-    print("At the end", classlabel)
+    if split_criterion == 0:
+        trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
+        print(trainTree)
+        createdtree.storeTree(trainTree, (dataname + " Tree"))
+        classlabel = classify(trainTree, storelabels, dataset[5])
+        print("At the end", classlabel)
+
+    elif split_criterion == 1:
+        trainTree = createdtree.CreateC45Tree(dataset, features, max_depth)
+        print(trainTree)
+        createdtree.storeTree(trainTree, (dataname + " Tree"))
+        classlabel = classify(trainTree, storelabels, dataset[5])
+        print("At the end", classlabel)
+
+
+
+
+    # Option 2 : 0 for cross validation, 1 for full sample
+
+    if args.validationType == 0:
+        pass
+
+
+
+
