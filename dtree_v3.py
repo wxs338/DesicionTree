@@ -172,8 +172,15 @@ if __name__ == '__main__':
 
     featurescopy = features[:]  # copy features
 
-    # Option 4 split criterion: 0 for information gain 1 for gain ratio
+    # Option 2 : 0 for cross validation, 1 for full sample
 
+    if validation_type == 0:
+        scores = fiveFolderscompute(dataset, featurescopy, split_criterion, max_depth)
+
+        print(scores)
+
+    # Option 4 split criterion: 0 for information gain 1 for gain ratio
+'''
     if split_criterion == 10:
         trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
         print(trainTree)
@@ -188,14 +195,10 @@ if __name__ == '__main__':
         classlabel = classify(trainTree, featurescopy, dataset[5])
         print("At the end", classlabel)
 
+'''
 
 
 
-    # Option 2 : 0 for cross validation, 1 for full sample
-
-    if validation_type == 0:
-        scores = fiveFolderscompute(dataset, featurescopy, split_criterion, max_depth)
-        print(scores)
 
 
 
