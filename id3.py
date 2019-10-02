@@ -71,10 +71,51 @@ def chooseBestFeat(dataSet):
             baseInfoGain=infoGain
     return bestFeat
 
+def chooseBestFeat_infogainratio(dataSet):
+    numberFeats=len(dataSet[0])-2
+    baseEntropy=calcShannonEnt(dataSet)
+    baseInfoGain=0
+    bestInfoGainRatio = 0.0
+    bestFeat=-1
+    newEntropy=0
+    for i in range(1, numberFeats+1):
+        featList=[example[i] for example in dataSet]
+        uniqueVals=set(featList)
+        newEntropy = 0.0
+        splitInfo = 0.0
+        for value in uniqueVals:
+            subDataSet=splitDataSet(dataSet,i,value)
+            prob=len(subDataSet)/float(len(dataSet))
+            newEntropy-=prob*calcShannonEnt(subDataSet)
+            splitInfo += -prob * log(prob, 2)
+        infoGain=baseEntropy-newEntropy
+        if (splitInfo == 0):
+            continue
+        infoGainRatio = infoGain / splitInfo
+        if(infoGainRatio > bestInfoGainRatio):
+            bestFeat = i
+            bestInfoGainRatio = infoGainRatio
+    return bestFeat
+
+
 # Create a terminal node value
 def to_terminal(group):
-	outcomes = [row[-1] for row in group]
-	return max(set(outcomes), key=outcomes.count)
+
+    outcomes = [row[-1] for row in group]
+
+    return max(set(outcomes), key=outcomes.count)
+
+
+def majorityCnt(classList):
+
+    classCount = {}
+    for vote in classList:
+        if vote not in classCount.keys():
+            classCount[vote] = 0
+        classCount[vote] += 1
+    sortedClassCount = sorted(classCount.items(),key=operator.itemgetter(1), reverse=True)
+    return sortedClassCount[0][0]
+
 
 #对数据集创建树
 def CreateTree(dataSet,labels):

@@ -151,7 +151,7 @@ def CreateC45Tree(dataSet,labels, maxDepth):
     for value in uniqueVals:
         subLabels=labels[:]
         #对分割后的数据子集递归创建树
-        Tree[bestLabel][value]=CreateID3Tree(splitDataSet(dataSet,bestFeat,value),subLabels)
+        Tree[bestLabel][value]=CreateID3Tree(splitDataSet(dataSet,bestFeat,value),subLabels, maxDepth)
     return Tree
 
 def storeTree(trainTree, filename):

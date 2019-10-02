@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 from mldata import *
 import createdtree
-import c45
+
 
 import operator
 import pickle
@@ -54,6 +54,47 @@ def evaluate_algorithm(dataset, algorithm, *args):
         scores.append(accuracy)
     return scores
 
+def fivecrossvalidationcompute(dataset): # , algorithm, n_folds, *args):
+	folds = cross_validation_5folds(dataset)
+	scores = list()
+	for fold in folds:
+		train_set = list(folds)
+		train_set.remove(fold)
+		train_set = sum(train_set, [])
+		test_set = list()
+		for row in fold:
+			row_copy = list(row)
+			test_set.append(row_copy)
+			row_copy[-1] = None
+		predicted = decision_tree(train_set, test_set, *args)
+		actual = [row[-1] for row in fold]
+		accuracy = accuracy_metric(actual, predicted)
+		scores.append(accuracy)
+	return scores
+
+def fiveFolderscompute(dataset, features, infogainType, max_depth):
+    folds = cross_validation_5folds(dataset)
+    scores = list()
+    for fold in folds:
+        train_set = list(folds)
+        train_set.remove(fold)
+        train_set = sum(train_set, [])
+        test_set = list()
+        for row in fold:
+            row_copy = list(row)
+            test_set.append(row_copy)
+            row_copy[-1] = None
+        if infogainType == 0:
+            trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
+        elif infogainType == 1:
+            trainTree = createdtree.CreateC45Tree(train_set, features, max_depth)
+        prodictions = decision_tree(trainTree, features, test_set)
+        actual = [row[-1] for row in fold]
+        accuracy = accuracy_metric(actual, prodictions)
+        scores.append(accuracy)
+    return scores
+
+
 
 # Make a prediction with a decision tree
 def predict(node, row):
@@ -70,13 +111,13 @@ def predict(node, row):
 
 
 # Classification and Regression Tree Algorithm
-def decision_tree(train, test, max_depth, min_size):
-    tree = id3.build_tree(train, max_depth, min_size)
+def decision_tree(tree, featlabels, testset): #, max_depth, min_size):
+    #tree = createdtree.build_tree(train, max_depth, min_size)
     predictions = list()
-    for row in test:
-        prediction = predict(tree, row)
+    for row in testset:
+        prediction = classify(tree, featlabels, row)
         predictions.append(prediction)
-    return (predictions)
+    return predictions
 
 def classify(inputTree,featlabels,testFeatValue):
     firstStr = list(inputTree.keys())[0]
@@ -129,22 +170,22 @@ if __name__ == '__main__':
 
     print("Features are: ", features[1:-1])
 
-    storelabels = features[:]  # copy features
+    featurescopy = features[:]  # copy features
 
     # Option 4 split criterion: 0 for information gain 1 for gain ratio
 
-    if split_criterion == 0:
+    if split_criterion == 10:
         trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
         print(trainTree)
         createdtree.storeTree(trainTree, (dataname + " Tree"))
-        classlabel = classify(trainTree, storelabels, dataset[5])
+        classlabel = classify(trainTree, featurescopy, dataset[5])
         print("At the end", classlabel)
 
-    elif split_criterion == 1:
+    elif split_criterion == 11:
         trainTree = createdtree.CreateC45Tree(dataset, features, max_depth)
         print(trainTree)
         createdtree.storeTree(trainTree, (dataname + " Tree"))
-        classlabel = classify(trainTree, storelabels, dataset[5])
+        classlabel = classify(trainTree, featurescopy, dataset[5])
         print("At the end", classlabel)
 
 
@@ -152,8 +193,9 @@ if __name__ == '__main__':
 
     # Option 2 : 0 for cross validation, 1 for full sample
 
-    if args.validationType == 0:
-        pass
+    if validation_type == 0:
+        scores = fiveFolderscompute(dataset, featurescopy, split_criterion, max_depth)
+        print(scores)
 
 
 
