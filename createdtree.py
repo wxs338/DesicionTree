@@ -53,12 +53,12 @@ def splitDataSet(dataSet,axis,value):
 
 #在数据集中选出最优的划分属性，返回值为索引值
 def chooseBestFeat(dataSet):
-    numberFeats=len(dataSet[0])-2
+    numberFeats = len(dataSet[0])-2
     baseEntropy=calcShannonEnt(dataSet)
     baseInfoGain=0
     bestFeat=-1
     newEntropy=0
-    for i in range(1, numberFeats+1):
+    for i in range(1, numberFeats+2):
         featList=[example[i] for example in dataSet]
         uniqueVals=set(featList)
         for one in uniqueVals:
@@ -78,7 +78,7 @@ def chooseBestFeat_infogainratio(dataSet):
     bestInfoGainRatio = 0.0
     bestFeat=-1
     newEntropy=0
-    for i in range(1, numberFeats+1):
+    for i in range(1, numberFeats+2):
         featList=[example[i] for example in dataSet]
         uniqueVals=set(featList)
         newEntropy = 0.0

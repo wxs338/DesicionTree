@@ -114,8 +114,9 @@ def predict(node, row):
 def decision_tree(tree, featlabels, testset): #, max_depth, min_size):
     #tree = createdtree.build_tree(train, max_depth, min_size)
     predictions = list()
+    feature_length = len(testset[0])-2
     for row in testset:
-        prediction = classify(tree, featlabels, row)
+        prediction = classify(tree, featlabels, row[1:feature_length])
         predictions.append(prediction)
     return predictions
 
@@ -131,6 +132,12 @@ def classify(inputTree,featlabels,testFeatValue):
             else:
                 classLabel = secondDict[firstStr_value]
     return classLabel
+
+def classifyAll(inputTree, featLabels, testDataSet):
+    classLabelAll = []
+    for testVec in testDataSet:
+        classLabelAll.append(classify(inputTree, featLabels, testVec))
+    return classLabelAll
 
 
 if __name__ == '__main__':
@@ -166,11 +173,13 @@ if __name__ == '__main__':
 
     features = [feature.name for feature in dataset.schema]
 
+
     print("The number of feature is ", len(dataset.schema))
 
-    print("Features are: ", features[1:-1])
+    print("Features are: ", features)
 
-    featurescopy = features[:]  # copy features
+    featurescopy = features[1:-1]  # copy features
+    print(featurescopy)
 
     # Option 2 : 0 for cross validation, 1 for full sample
 
@@ -179,21 +188,25 @@ if __name__ == '__main__':
 
         print(scores)
 
+    elif validation_type == 1:
+        if split_criterion == 10:
+            trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
+            print(trainTree)
+            createdtree.storeTree(trainTree, (dataname + " Tree"))
+            classlabel = classify(trainTree, featurescopy, dataset[5])
+            print("At the end", classlabel)
+
+        elif split_criterion == 11:
+            trainTree = createdtree.CreateC45Tree(dataset, features, max_depth)
+            print(trainTree)
+            createdtree.storeTree(trainTree, (dataname + " Tree"))
+            classlabel = classify(trainTree, featurescopy, dataset[5])
+            print("At the end", classlabel)
+
+
     # Option 4 split criterion: 0 for information gain 1 for gain ratio
 '''
-    if split_criterion == 10:
-        trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
-        print(trainTree)
-        createdtree.storeTree(trainTree, (dataname + " Tree"))
-        classlabel = classify(trainTree, featurescopy, dataset[5])
-        print("At the end", classlabel)
-
-    elif split_criterion == 11:
-        trainTree = createdtree.CreateC45Tree(dataset, features, max_depth)
-        print(trainTree)
-        createdtree.storeTree(trainTree, (dataname + " Tree"))
-        classlabel = classify(trainTree, featurescopy, dataset[5])
-        print("At the end", classlabel)
+    
 
 '''
 
