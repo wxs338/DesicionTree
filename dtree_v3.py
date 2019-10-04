@@ -184,7 +184,7 @@ if __name__ == '__main__':
     # Option 2 : 0 for cross validation, 1 for full sample
 
     if validation_type == 0:
-        scores = fiveFolderscompute(dataset, featurescopy, split_criterion, max_depth)
+        scores = fiveFolderscompute(dataset[0:20], featurescopy, split_criterion, max_depth)
 
         print(scores)
 
