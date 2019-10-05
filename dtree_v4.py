@@ -121,16 +121,19 @@ if __name__ == '__main__':
     print(features)
     print("The number of feature is ", len(features))
 
-    #dataset1 = dataset[:1000]
+
 
     actual = [row[-1] for row in dataset]
 
     
     for example in dataset:
         example.pop(0)
-    #print(dataset[10])
+    #print
+    dataset_copy = list(dataset)
+    dataset1 = list()
 
-    # Option 2: validation_type: 0 for cross validation, 1 for full sample
+
+# Option 2: validation_type: 0 for cross validation, 1 for full sample
 
     if validation_type == 0:
         scores = fiveFolderscompute(dataset, features, split_criterion, max_depth)
@@ -154,6 +157,10 @@ if __name__ == '__main__':
         accuracy = accuracy_metric(actual, prodictions)
         #print ("The test testsample is " + ','.join(testsample))
         #print ("The lable for the testsample is " + str(classlabel))
+
+    print("Final Report is:")
+    print("The Accuracy with options is %.f percents", accuracy)
+    print("The tree size is ", )
 
 
 
