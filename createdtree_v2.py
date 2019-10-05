@@ -9,7 +9,7 @@ def majority_cnt(class_list):
         if vote not in class_count.keys():
             class_count[vote] = 0
         class_count[vote] += 1
-    sorted_class_count = sorted(class_count.items(), key=operator.itemgetter(1), reversed=True)
+    sorted_class_count = sorted(class_count.items(), key=operator.itemgetter(1), reverse=True)
     return sorted_class_count[0][0]
 
 def calc_shannon_ent(data_set):
@@ -38,7 +38,9 @@ def split_data_set(data_set, axis, value):
             ret_data_set.append(reduce_feat_vec)
     return ret_data_set
 
-
+def make_leaf(subset):
+	outcomes = [row[-1] for row in subset]
+	return max(set(outcomes), key=outcomes.count)
 # ID3
 def choose_best_feature_to_split(data_set):
     num_feature = len(data_set[0]) - 1
@@ -62,7 +64,7 @@ def choose_best_feature_to_split(data_set):
 # C4.5
 def choose_best_feature_to_split_ratio(data_set):
 
-    num_feature = len(data_set[0]) - 1 
+    num_feature = len(data_set[0]) - 1
     base_entropy = calc_shannon_ent(data_set) 
     best_info_gain_ratio = 0.0
     best_feature_idx = -1
@@ -84,50 +86,57 @@ def choose_best_feature_to_split_ratio(data_set):
         if info_gain_ratio > best_info_gain_ratio:
             best_info_gain_ratio = info_gain_ratio
             best_feature_idx = feature_idx
+    print("best Feature to split is ", best_feature_idx)
     return best_feature_idx
 
-def create_ID3tree(data_set, labels):
+def create_ID3tree(data_set, labels, max_depth, depth):
         
     class_list = [sample[-1] for sample in data_set] 
 
     if class_list.count(class_list[-1]) == len(class_list):
         return class_list[0]
-
+    if depth >= max_depth:
+        return make_leaf(data_set)
     if len(data_set[0]) == 1:
         return majority_cnt((class_list))
 
     best_feature_idx = choose_best_feature_to_split(data_set)
-    best_feat_label = labels[best_feature_idx] 
+    best_feat_label = labels[best_feature_idx]
+    print("creating ID3 Tree", labels[best_feature_idx])
     my_tree = {best_feat_label: {}}
     del (labels[best_feature_idx]) 
     feature_values = [example[best_feature_idx] for example in data_set]
     unique_feature_values = set(feature_values)
-    for feature_value in unique_feature_values:
-        sub_labels = labels[:]  
+    if depth<max_depth:
+        for feature_value in unique_feature_values:
+            sub_labels = labels[:]
 
-        sub_data_set = split_data_set(data_set, best_feature_idx, feature_value) 
-        my_tree[best_feat_label][feature_value] = create_ID3tree(sub_data_set, sub_labels)
+            sub_data_set = split_data_set(data_set, best_feature_idx, feature_value)
+            my_tree[best_feat_label][feature_value] = create_ID3tree(sub_data_set, sub_labels, max_depth, depth+1)
     return my_tree
 
-def create_C45tree(data_set, labels):
+def create_C45tree(data_set, labels, max_depth, depth):
     class_list = [sample[-1] for sample in data_set] 
 
     if class_list.count(class_list[-1]) == len(class_list):
         return class_list[-1]
-
+    if depth >= max_depth:
+        return majority_cnt((class_list))
     if len(data_set[0]) == 1:
         return majority_cnt((class_list))
 
     best_feature_idx = choose_best_feature_to_split_ratio(data_set)
-    best_feat_label = labels[best_feature_idx] 
+    best_feat_label = labels[best_feature_idx]
+    print("creating C45 Tree", labels[best_feature_idx])
     my_tree = {best_feat_label: {}}
     del (labels[best_feature_idx]) 
     feature_values = [example[best_feature_idx] for example in data_set]
     unique_feature_values = set(feature_values)
-    for feature_value in unique_feature_values:
-        sub_labels = labels[:]  
+    if depth < max_depth:
+        for feature_value in unique_feature_values:
+            sub_labels = labels[:]
 
-        sub_data_set = split_data_set(data_set, best_feature_idx, feature_value) 
-        my_tree[best_feat_label][feature_value] = create_C45tree(sub_data_set, sub_labels)
+            sub_data_set = split_data_set(data_set, best_feature_idx, feature_value)
+            my_tree[best_feat_label][feature_value] = create_C45tree(sub_data_set, sub_labels, max_depth, depth+1)
     return my_tree
 

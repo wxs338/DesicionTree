@@ -13,6 +13,7 @@ import random
 
 
 def cross_validation_5folds(dataset):
+    random.seed(12345)
     dataset_split = list()
     dataset_copy = list(dataset)
     fold_size = int(len(dataset) / 5)
@@ -34,11 +35,12 @@ def accuracy_metric(actual, predicted):
             correct += 1
     return correct / float(len(actual)) * 100.0
 
-def fiveFolderscompute(dataset, features, infogainType):
+def fiveFolderscompute(dataset, features, infogainType, max_depth):
     folds = cross_validation_5folds(dataset)
-    features_copy = features.copy()
+    #features_copy = features
     scores = list()
     for fold in folds:
+        features_copy = features.copy()
         train_set = list(folds)
         train_set.remove(fold)
         train_set = sum(train_set, [])
@@ -48,11 +50,11 @@ def fiveFolderscompute(dataset, features, infogainType):
             test_set.append(row_copy)
             row_copy[-1] = None
         if infogainType == 0:
-            trainTree = createdtree_v2.create_ID3tree(train_set, features)
+            trainTree = createdtree_v2.create_ID3tree(train_set, features_copy, max_depth, 0)
         elif infogainType == 1:
-            trainTree = createdtree_v2.create_C45tree(train_set, features)
+            trainTree = createdtree_v2.create_C45tree(train_set, features_copy, max_depth, 0)
         #prodictions = decision_tree(trainTree, features_copy, test_set)
-        prodictions = classifyAll (trainTree, features_copy, test_set)
+        prodictions = classifyAll(trainTree, features, test_set)
         actual = [row[-1] for row in fold]
         accuracy = accuracy_metric(actual, prodictions)
         scores.append(accuracy)
@@ -77,7 +79,7 @@ def classifyAll(inputTree, featLabels, testDataSet):
     classLabelAll = []
     for testVec in testDataSet:
         testVec.pop(-1)
-        print(testVec)
+        #print(testVec)
         classLabelAll.append(classify(inputTree, featLabels, testVec))
     return classLabelAll
 
@@ -116,31 +118,42 @@ if __name__ == '__main__':
     features.pop(0)
     features.pop(-1)
     featurescopy = features.copy()
-    print (features)
+    print(features)
     print("The number of feature is ", len(features))
+
+    #dataset1 = dataset[:1000]
+
+    actual = [row[-1] for row in dataset]
+
     
     for example in dataset:
         example.pop(0)
-    #print(dataset)
+    #print(dataset[10])
 
     # Option 2: validation_type: 0 for cross validation, 1 for full sample
 
     if validation_type == 0:
-        scores = fiveFolderscompute(dataset, features, split_criterion)
-        print(scores)
+        scores = fiveFolderscompute(dataset, features, split_criterion, max_depth)
+        if len(scores) != 0:
+            average_scores = sum(scores)/len(scores)
+        print(scores, average_scores)
 
     elif validation_type == 1:
+
         testsample = ['-', '+', '-', '-', '-', '+', '+', '+', '+', '+', '+']
-        
+
+
          # Option 4: split_criterion: 0 for information gain, 1 for gain ratio
 
         if split_criterion == 0:
-            trainTree = createdtree_v2.create_ID3tree(dataset, features)
+            trainTree = createdtree_v2.create_ID3tree(dataset, featurescopy, max_depth, 0)
         else:
-            trainTree = createdtree_v2.create_C45tree(dataset, features)
-        classlabel = classify(trainTree, featurescopy, testsample)
-        print ("The test testsample is " + ','.join(testsample))
-        print ("The lable for the testsample is " + str(classlabel))
+            trainTree = createdtree_v2.create_C45tree(dataset, featurescopy, max_depth, 0)
+        prodictions = classify(trainTree, featurescopy, dataset)
+
+        accuracy = accuracy_metric(actual, prodictions)
+        #print ("The test testsample is " + ','.join(testsample))
+        #print ("The lable for the testsample is " + str(classlabel))
 
 
 

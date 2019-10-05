@@ -184,13 +184,13 @@ if __name__ == '__main__':
     # Option 2 : 0 for cross validation, 1 for full sample
 
     if validation_type == 0:
-        scores = fiveFolderscompute(dataset[0:20], featurescopy, split_criterion, max_depth)
+        scores = fiveFolderscompute(dataset[0:200][1:], featurescopy, split_criterion, max_depth)
 
         print(scores)
 
     elif validation_type == 1:
         if split_criterion == 10:
-            trainTree = createdtree.CreateID3Tree(dataset, features, max_depth)
+            trainTree = createdtree.CreateID3Tree(dataset[0:200][1:], features, max_depth)
             print(trainTree)
             createdtree.storeTree(trainTree, (dataname + " Tree"))
             classlabel = classify(trainTree, featurescopy, dataset[5])
